@@ -8,7 +8,7 @@ const { items } = Astro.props;
 <ol class="pubs">
   {items.map((p) => (
     <li>
-      <span class="year">{p.year}</span>
+      <span class="year">{p.year ?? 'n.d.'}</span>
       <div>
         <span class="tag">{p.type}</span>
         <h3>{p.title}</h3>

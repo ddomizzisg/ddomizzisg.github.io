@@ -6,7 +6,7 @@ import portrait from '../assets/portrait.jpg';
 import { person, topics } from '../data/site';
 import { publications } from '../data/publications';
 
-const latest = [...publications].sort((a, b) => b.year - a.year).slice(0, 2);
+const latest = publications.filter((p) => p.year).slice(0, 2);
 const explore = [
   { href: '/research/', title: 'Research', text: 'Interests and ongoing topics' },
   { href: '/publications/', title: 'Publications', text: 'Journal and conference papers' },

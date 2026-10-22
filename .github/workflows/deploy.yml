@@ -26,7 +26,8 @@ jobs:
           cache: npm
       - run: npm ci
       # The build parses public/publications.bib, groups entries into journal and
-      # conference papers, and fails on malformed entries (no title or year).
+      # conference papers, and fails on entries without a title
+      # (entries without a year are shown as "n.d." with a warning).
       - name: Build site from publications.bib
         run: npm run build
       - uses: actions/upload-pages-artifact@v3

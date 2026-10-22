@@ -6,7 +6,7 @@ export type PubType = 'Journal' | 'Conference' | 'Other';
 
 export interface Publication {
   key: string;
-  year: number;
+  year: number | null;
   title: string;
   authors: string[];
   venue: string;
@@ -60,8 +60,9 @@ function load(): Publication[] {
 
   return entries.map((e) => {
     const f = e.fields as Record<string, any>;
-    const year = parseInt(f.year, 10);
-    if (!f.title || !year) throw new Error(`publications.bib: entry "${e.key}" needs a title and a year`);
+    const year = parseInt(f.year, 10) || null;
+    if (!f.title) throw new Error(`publications.bib: entry "${e.key}" needs a title`);
+    if (!year) console.warn(`publications.bib: entry "${e.key}" has no year; shown as "n.d."`);
 
     const venueField = VENUE_FIELDS.find((v) => f[v]);
     const doi = f.doi as string | undefined;
@@ -79,12 +80,12 @@ function load(): Publication[] {
       type: TYPE_MAP[e.type] ?? 'Other',
       url: doi ? `https://doi.org/${doi}` : f.url,
       bibtex: raw.get(e.key) ?? '',
-      citation: `${authors.join(', ')} (${year}). ${title}.${venue ? ` ${venue}.` : ''}`,
+      citation: `${authors.join(', ')} (${year ?? 'n.d.'}). ${title}.${venue ? ` ${venue}.` : ''}`,
     };
   });
 }
 
-export const publications = load().sort((a, b) => b.year - a.year || a.title.localeCompare(b.title));
+export const publications = load().sort((a, b) => (b.year ?? 9999) - (a.year ?? 9999) || a.title.localeCompare(b.title));
 
 export const groups: { type: PubType; label: string; items: Publication[] }[] = (
   [
