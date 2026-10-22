@@ -20,6 +20,7 @@ const { items } = Astro.props;
           ))}
         </p>
         <p class="venue">{p.venue}</p>
+        {p.url && <p class="link"><a href={p.url} target="_blank" rel="noopener">DOI / link</a></p>}
       </div>
     </li>
   ))}
@@ -35,5 +36,6 @@ const { items } = Astro.props;
   .authors { margin: 0; font-size: .95rem; }
   .authors strong { color: var(--navy); }
   .venue { margin: .2rem 0 0; font-size: .95rem; font-style: italic; color: var(--muted); }
+  .link { margin: .3rem 0 0; font: 500 .85rem var(--sans); }
   @media (max-width: 560px) { li { grid-template-columns: 1fr; } }
 </style>

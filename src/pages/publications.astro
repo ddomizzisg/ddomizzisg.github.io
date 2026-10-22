@@ -2,22 +2,33 @@
 import Base from '../layouts/Base.astro';
 import PageTitle from '../components/PageTitle.astro';
 import PublicationList from '../components/PublicationList.astro';
-import { publications } from '../data/publications';
+import { groups, publications } from '../data/publications';
 import { links } from '../data/site';
 
-const sorted = [...publications].sort((a, b) => b.year - a.year);
 const scholar = links[0];
 ---
 
 <Base title="Publications" description="Selected publications of Dante D. Sánchez-Gallegos.">
-  <PageTitle title="Publications" subtitle="Selected papers. The complete list is available on Google Scholar." />
+  <PageTitle title="Publications" subtitle="Journal and conference papers" />
   <section class="section">
     <div class="wrap">
-      <div class="section-head">
-        <h2>Selected publications</h2>
-        <a href={scholar.url} target="_blank" rel="noopener">Google Scholar →</a>
-      </div>
-      <PublicationList items={sorted} />
+      <p class="meta">
+        {publications.length} publications ·
+        <a href="/publications.bib" download>Download BibTeX</a> ·
+        <a href={scholar.url} target="_blank" rel="noopener">Google Scholar</a>
+      </p>
+      {groups.map((g) => (
+        <div class="group" id={g.type.toLowerCase()}>
+          <div class="section-head"><h2>{g.label} <span class="count">{g.items.length}</span></h2></div>
+          <PublicationList items={g.items} />
+        </div>
+      ))}
     </div>
   </section>
 </Base>
+
+<style>
+  .meta { margin: 0 0 2rem; font: .9rem var(--sans); color: var(--muted); }
+  .group + .group { margin-top: 3rem; }
+  .count { font-size: .85rem; font-weight: 600; color: var(--blue-600); background: var(--sky); border-radius: 999px; padding: .1rem .6rem; vertical-align: middle; }
+</style>
