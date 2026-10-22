@@ -1,0 +1,92 @@
+---
+import { Image } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import PublicationList from '../components/PublicationList.astro';
+import portrait from '../assets/portrait.jpg';
+import { person, topics } from '../data/site';
+import { publications } from '../data/publications';
+
+const latest = [...publications].sort((a, b) => b.year - a.year).slice(0, 2);
+const explore = [
+  { href: '/research/', title: 'Research', text: 'Interests and ongoing topics' },
+  { href: '/publications/', title: 'Publications', text: 'Selected papers and venues' },
+  { href: '/CVDante.pdf', title: 'Curriculum Vitae', text: 'Download as PDF' },
+  { href: '/contact/', title: 'Contact', text: 'Profiles and affiliation' },
+];
+---
+
+<Base>
+  <section class="hero">
+    <div class="wrap hero-inner">
+      <Image class="portrait" src={portrait} alt={`Portrait of ${person.name}`} width={440} height={440} densities={[1, 2]} loading="eager" />
+      <div>
+        <p class="eyebrow">{person.role} · ARCOS</p>
+        <h1>{person.name}</h1>
+        <p class="affil">
+          <a href={person.universityUrl} target="_blank" rel="noopener">{person.university}</a>{' · '}
+          <a href={person.groupUrl} target="_blank" rel="noopener">{person.group}</a>
+        </p>
+        <p>
+          I am an Assistant Professor at the Universidad Carlos III de Madrid (UC3M) and a member of the ARCOS
+          research group.
+        </p>
+        <div class="actions">
+          <a class="btn btn-primary" href="/CVDante.pdf" target="_blank" rel="noopener">Download CV</a>
+          <a class="btn btn-ghost" href="/contact/">Contact</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Research interests</h2>
+        <a href="/research/">Learn more →</a>
+      </div>
+      <div class="grid">
+        {topics.map((t) => (
+          <div class="card"><h3>{t.title}</h3></div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Recent publications</h2>
+        <a href="/publications/">All publications →</a>
+      </div>
+      <PublicationList items={latest} />
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head"><h2>Explore</h2></div>
+      <div class="grid">
+        {explore.map((e) => (
+          <a class="card" href={e.href}>
+            <h3>{e.title}</h3>
+            <p>{e.text}</p>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .hero { background: radial-gradient(1200px 400px at 85% -10%, var(--sky-2), transparent 60%), linear-gradient(180deg, var(--sky), var(--white)); border-bottom: 1px solid var(--line); }
+  .hero-inner { display: grid; grid-template-columns: 220px 1fr; gap: clamp(1.5rem, 5vw, 3.5rem); align-items: center; padding-block: clamp(2.5rem, 7vw, 5rem); }
+  .portrait { width: 220px; height: 220px; border-radius: 50%; object-fit: cover; border: 5px solid var(--white); box-shadow: 0 0 0 1px var(--line), var(--shadow); }
+  h1 { margin: 0 0 .4rem; font-size: clamp(2rem, 5vw, 3rem); }
+  .affil { margin: 0 0 1rem; font-family: var(--sans); font-weight: 500; color: var(--muted); }
+  .actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 1.25rem; }
+  @media (max-width: 720px) {
+    .hero-inner { grid-template-columns: 1fr; text-align: center; justify-items: center; }
+    .portrait { width: 160px; height: 160px; }
+    .actions { justify-content: center; }
+  }
+</style>

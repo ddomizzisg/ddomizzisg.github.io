@@ -1,0 +1,64 @@
+---
+import { nav, person } from '../data/site';
+
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWith(href.replace(/\/$/, '')));
+---
+
+<header class="site-header">
+  <div class="wrap bar">
+    <a class="brand" href="/">{person.name}</a>
+    <button class="toggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="menu">
+      <span></span><span></span><span></span>
+    </button>
+    <nav id="menu" aria-label="Main">
+      <ul>
+        {nav.map((item) => (
+          <li>
+            <a href={item.href} aria-current={isActive(item.href) ? 'page' : undefined}>{item.label}</a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<script>
+  const toggle = document.querySelector<HTMLButtonElement>('.toggle');
+  const header = document.querySelector('.site-header');
+  toggle?.addEventListener('click', () => {
+    const open = header?.classList.toggle('open') ?? false;
+    toggle.setAttribute('aria-expanded', String(open));
+  });
+</script>
+
+<style>
+  .site-header {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(10, 35, 81, .96);
+    backdrop-filter: blur(8px);
+    color: var(--white);
+  }
+  .bar { display: flex; align-items: center; justify-content: space-between; min-height: 60px; gap: 1rem; flex-wrap: wrap; }
+  .brand { font: 700 1.05rem var(--sans); color: var(--white); text-decoration: none; letter-spacing: .01em; }
+  nav ul { display: flex; gap: .25rem; list-style: none; margin: 0; padding: 0; }
+  nav a {
+    display: block; padding: .45rem .85rem; border-radius: 999px;
+    font: 500 .92rem var(--sans); color: #c9d8f5; text-decoration: none;
+  }
+  nav a:hover { color: var(--white); background: rgba(255, 255, 255, .1); }
+  nav a[aria-current='page'] { color: var(--navy); background: var(--white); }
+
+  .toggle { display: none; background: none; border: 0; padding: .6rem; cursor: pointer; }
+  .toggle span { display: block; width: 22px; height: 2px; background: var(--white); margin: 4px 0; transition: transform .2s, opacity .2s; }
+  .open .toggle span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+  .open .toggle span:nth-child(2) { opacity: 0; }
+  .open .toggle span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+  @media (max-width: 680px) {
+    .toggle { display: block; }
+    nav { display: none; width: 100%; padding-bottom: .75rem; }
+    .open nav { display: block; }
+    nav ul { flex-direction: column; }
+  }
+</style>

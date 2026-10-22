@@ -1,0 +1,22 @@
+---
+import { links, person } from '../data/site';
+---
+
+<footer>
+  <div class="wrap">
+    <ul>
+      {links.map((l) => <li><a href={l.url} target="_blank" rel="noopener">{l.label}</a></li>)}
+    </ul>
+    <p>
+      © {new Date().getFullYear()} {person.name} · {person.university} · {person.group}
+    </p>
+  </div>
+</footer>
+
+<style>
+  footer { background: var(--navy); color: #9db4de; font: .875rem var(--sans); padding-block: 2rem; }
+  ul { display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; list-style: none; margin: 0 0 1rem; padding: 0; }
+  a { color: var(--white); text-decoration: none; font-weight: 500; }
+  a:hover { text-decoration: underline; color: var(--white); }
+  p { margin: 0; }
+</style>

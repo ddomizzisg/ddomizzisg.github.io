@@ -1,0 +1,35 @@
+---
+import Base from '../layouts/Base.astro';
+import PageTitle from '../components/PageTitle.astro';
+import { topics } from '../data/site';
+---
+
+<Base title="Research" description="Research interests of Dante D. Sánchez-Gallegos: cloud-edge continuum, serverless computing and data management for data science.">
+  <PageTitle title="Research" subtitle="Distributed systems for scientific and data science applications" />
+  <section class="section">
+    <div class="wrap">
+      <p class="lead">
+        My research focuses on improving the design and deployment of scientific and data science systems, with a
+        particular interest in distributed systems, cloud computing and data processing workflows. My work covers,
+        but is not limited to, the following topics.
+      </p>
+      <div class="topics">
+        {topics.map((t, i) => (
+          <article class="card">
+            <span class="num">{String(i + 1).padStart(2, '0')}</span>
+            <h3>{t.title}</h3>
+            <p>{t.text}</p>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .lead { max-width: 70ch; margin: 0 0 2rem; }
+  .topics { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); }
+  .num { font: 700 .85rem var(--sans); color: var(--blue); letter-spacing: .1em; }
+  .card h3 { margin-top: .35rem; font-size: 1.2rem; }
+  .card p { font-size: 1rem; }
+</style>
