@@ -20,7 +20,10 @@ const { items } = Astro.props;
           ))}
         </p>
         <p class="venue">{p.venue}</p>
-        {p.url && <p class="link"><a href={p.url} target="_blank" rel="noopener">DOI / link</a></p>}
+        <div class="actions">
+          <button type="button" class="btn btn-ghost sm" data-cite data-bibtex={p.bibtex} data-text={p.citation}>Cite</button>
+          <a class="btn btn-primary sm" href={p.url ?? `https://scholar.google.com/scholar?q=${encodeURIComponent(p.title)}`} target="_blank" rel="noopener">{p.url ? 'Paper' : 'Find paper'}</a>
+        </div>
       </div>
     </li>
   ))}
@@ -36,6 +39,7 @@ const { items } = Astro.props;
   .authors { margin: 0; font-size: .95rem; }
   .authors strong { color: var(--navy); }
   .venue { margin: .2rem 0 0; font-size: .95rem; font-style: italic; color: var(--muted); }
-  .link { margin: .3rem 0 0; font: 500 .85rem var(--sans); }
+  .actions { display: flex; gap: .5rem; margin-top: .75rem; }
+  .sm { padding: .3rem .85rem; font-size: .8rem; cursor: pointer; }
   @media (max-width: 560px) { li { grid-template-columns: 1fr; } }
 </style>

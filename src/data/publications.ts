@@ -12,6 +12,8 @@ export interface Publication {
   venue: string;
   type: PubType;
   url?: string;
+  bibtex: string;
+  citation: string;
 }
 
 const BIB_PATH = join(process.cwd(), 'public', 'publications.bib');
@@ -38,8 +40,20 @@ function formatAuthor(a: { lastName?: string; firstName?: string; name?: string 
   return (given ? `${a.lastName}, ${given}` : `${a.lastName}`).normalize('NFC');
 }
 
+// Raw source of each entry, keyed by citation key, so "Cite" can show the original BibTeX.
+function rawEntries(text: string): Map<string, string> {
+  const raw = new Map<string, string>();
+  for (const chunk of text.split(/^(?=@\w+\s*\{)/m)) {
+    const key = chunk.match(/^@\w+\s*\{\s*([^,\s]+)/)?.[1];
+    if (key) raw.set(key, chunk.trim());
+  }
+  return raw;
+}
+
 function load(): Publication[] {
-  const { entries, errors } = parse(readFileSync(BIB_PATH, 'utf8'));
+  const source = readFileSync(BIB_PATH, 'utf8');
+  const raw = rawEntries(source);
+  const { entries, errors } = parse(source);
   if (errors.length) {
     throw new Error(`publications.bib: ${errors.map((e) => e.error).join('; ')}`);
   }
@@ -52,14 +66,20 @@ function load(): Publication[] {
     const venueField = VENUE_FIELDS.find((v) => f[v]);
     const doi = f.doi as string | undefined;
 
+    const title = String(f.title).replace(/\s+/g, ' ').trim();
+    const authors: string[] = (f.author ?? []).map(formatAuthor);
+    const venue = venueField ? String(f[venueField]).replace(/\s+/g, ' ').trim() : '';
+
     return {
       key: e.key,
       year,
-      title: String(f.title).replace(/\s+/g, ' ').trim(),
-      authors: (f.author ?? []).map(formatAuthor),
-      venue: venueField ? String(f[venueField]).replace(/\s+/g, ' ').trim() : '',
+      title,
+      authors,
+      venue,
       type: TYPE_MAP[e.type] ?? 'Other',
       url: doi ? `https://doi.org/${doi}` : f.url,
+      bibtex: raw.get(e.key) ?? '',
+      citation: `${authors.join(', ')} (${year}). ${title}.${venue ? ` ${venue}.` : ''}`,
     };
   });
 }
@@ -76,5 +96,5 @@ export const groups: { type: PubType; label: string; items: Publication[] }[] = 
   .map(([type, label]) => ({ type, label, items: publications.filter((p) => p.type === type) }))
   .filter((g) => g.items.length);
 
-// Matches both spellings of the surname so the owner is always highlighted.
-export const isMe = (author: string) => /S[aá]nchez-Gallegos/.test(author.normalize('NFC'));
+// Matches the surname spellings (accent, hyphen) with initial D so only the owner is highlighted.
+export const isMe = (author: string) => /S[aá]nchez[- ]Gallegos, D/.test(author.normalize('NFC'));

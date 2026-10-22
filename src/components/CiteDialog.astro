@@ -1,0 +1,74 @@
+<dialog id="cite" aria-labelledby="cite-title">
+  <form method="dialog" class="head">
+    <h2 id="cite-title">Cite this paper</h2>
+    <button class="close" aria-label="Close">×</button>
+  </form>
+  <div class="tabs" role="tablist">
+    <button type="button" role="tab" data-fmt="bibtex" aria-selected="true">BibTeX</button>
+    <button type="button" role="tab" data-fmt="text" aria-selected="false">Text</button>
+  </div>
+  <pre id="cite-body" tabindex="0"></pre>
+  <div class="foot">
+    <button type="button" class="btn btn-primary" id="cite-copy">Copy</button>
+  </div>
+</dialog>
+
+<script>
+  const dialog = document.querySelector<HTMLDialogElement>('#cite')!;
+  const body = dialog.querySelector<HTMLElement>('#cite-body')!;
+  const copy = dialog.querySelector<HTMLButtonElement>('#cite-copy')!;
+  const tabs = dialog.querySelectorAll<HTMLButtonElement>('[data-fmt]');
+  let data = { bibtex: '', text: '' };
+  let fmt: 'bibtex' | 'text' = 'bibtex';
+
+  const render = () => {
+    body.textContent = data[fmt];
+    tabs.forEach((t) => t.setAttribute('aria-selected', String(t.dataset.fmt === fmt)));
+    copy.textContent = 'Copy';
+  };
+
+  document.addEventListener('click', (e) => {
+    const btn = (e.target as Element).closest<HTMLElement>('[data-cite]');
+    if (btn) {
+      data = { bibtex: btn.dataset.bibtex ?? '', text: btn.dataset.text ?? '' };
+      fmt = 'bibtex';
+      render();
+      dialog.showModal();
+    } else if (e.target === dialog) {
+      dialog.close();
+    }
+  });
+
+  tabs.forEach((t) =>
+    t.addEventListener('click', () => {
+      fmt = t.dataset.fmt as typeof fmt;
+      render();
+    })
+  );
+
+  copy.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(data[fmt]);
+      copy.textContent = 'Copied ✓';
+    } catch {
+      const range = document.createRange();
+      range.selectNodeContents(body);
+      getSelection()?.removeAllRanges();
+      getSelection()?.addRange(range);
+      copy.textContent = 'Press Ctrl+C';
+    }
+  });
+</script>
+
+<style is:global>
+  #cite { width: min(92vw, 640px); max-height: 85vh; padding: 1.25rem 1.5rem; border: 0; border-radius: 14px; box-shadow: 0 20px 60px rgba(10, 35, 81, .35); color: var(--ink); }
+  #cite::backdrop { background: rgba(10, 35, 81, .55); }
+  #cite .head { display: flex; justify-content: space-between; align-items: center; margin: 0 0 .75rem; }
+  #cite h2 { margin: 0; font-size: 1.2rem; }
+  #cite .close { background: none; border: 0; font-size: 1.6rem; line-height: 1; cursor: pointer; color: var(--muted); }
+  #cite .tabs { display: flex; gap: .25rem; margin-bottom: .75rem; }
+  #cite .tabs button { font: 600 .85rem var(--sans); padding: .35rem .9rem; border-radius: 999px; border: 1px solid var(--line); background: var(--white); color: var(--blue); cursor: pointer; }
+  #cite .tabs button[aria-selected='true'] { background: var(--blue); border-color: var(--blue); color: var(--white); }
+  #cite pre { margin: 0; padding: 1rem; background: var(--sky); border: 1px solid var(--line); border-radius: 8px; font: .85rem/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre-wrap; word-break: break-word; overflow: auto; max-height: 45vh; }
+  #cite .foot { margin-top: 1rem; text-align: right; }
+</style>

@@ -13,8 +13,8 @@ const scholar = links[0];
   <section class="section">
     <div class="wrap">
       <p class="meta">
-        {publications.length} publications ·
-        <a href="/publications.bib" download>Download BibTeX</a> ·
+        {publications.length} publications{' · '}
+        <a href="/publications.bib" download>Download BibTeX</a>{' · '}
         <a href={scholar.url} target="_blank" rel="noopener">Google Scholar</a>
       </p>
       {groups.map((g) => (
