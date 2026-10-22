@@ -1,0 +1,56 @@
+---
+import Base from '../layouts/Base.astro';
+import PageTitle from '../components/PageTitle.astro';
+import { projects, stays } from '../data/projects';
+---
+
+<Base title="Projects" description="Research projects and research stays of Dante D. Sánchez-Gallegos.">
+  <PageTitle title="Projects" subtitle="Participation in research projects and research stays" />
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head"><h2>Research projects</h2></div>
+      <ol class="timeline">
+        {projects.map((p) => (
+          <li>
+            <span class="period">{p.period}</span>
+            <div class="card">
+              <span class="tag">{p.funding}</span>
+              <h3>{p.title}</h3>
+              <p><strong>Contribution:</strong> {p.role}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head"><h2>Research stays</h2></div>
+      <ol class="timeline">
+        {stays.map((s) => (
+          <li>
+            <span class="period">{s.period}</span>
+            <div class="card">
+              <span class="tag">{s.institution}</span>
+              <h3>{s.project}</h3>
+              <p>Host: {s.host}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .timeline { list-style: none; margin: 0; padding: 0; display: grid; gap: 1rem; }
+  li { display: grid; grid-template-columns: 9.5rem 1fr; gap: .25rem 1.25rem; align-items: start; }
+  .period { font: 700 .95rem var(--sans); color: var(--blue); padding-top: 1.25rem; }
+  .tag { display: inline-block; font: 600 .7rem var(--sans); letter-spacing: .08em; text-transform: uppercase; background: var(--sky); color: var(--blue-600); padding: .15rem .55rem; border-radius: 999px; }
+  .card h3 { margin: .5rem 0; font-size: 1.05rem; line-height: 1.4; }
+  .card p { color: var(--ink); font-size: .95rem; }
+  .card strong { color: var(--navy); }
+  @media (max-width: 640px) { li { grid-template-columns: 1fr; } .period { padding-top: 0; } }
+</style>
