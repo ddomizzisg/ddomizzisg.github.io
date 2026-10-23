@@ -30,11 +30,13 @@ const filters = [
         ))}
       </div>
 
+      <nav class="pager" aria-label="Publication pages (top)" hidden></nav>
+
       <div id="pub-list" data-page-size="10">
         <PublicationList items={publications} />
       </div>
 
-      <nav id="pager" class="pager" aria-label="Publication pages" hidden></nav>
+      <nav class="pager" aria-label="Publication pages (bottom)" data-bottom hidden></nav>
     </div>
   </section>
 </Base>
@@ -42,40 +44,83 @@ const filters = [
 <script>
   const list = document.querySelector<HTMLElement>('#pub-list')!;
   const items = [...list.querySelectorAll<HTMLLIElement>('li')];
-  const pager = document.querySelector<HTMLElement>('#pager')!;
+  const pagers = document.querySelectorAll<HTMLElement>('.pager');
   const chips = document.querySelectorAll<HTMLButtonElement>('[data-filter]');
   const size = Number(list.dataset.pageSize) || 10;
 
   let filter = 'all';
   let page = 1;
 
-  function render(scroll = false) {
+  // Page numbers to show, with 0 standing for an ellipsis: 1 … 4 5 6 … 9
+  function window_(current: number, total: number): number[] {
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+    const out = new Set([1, total, current - 1, current, current + 1]);
+    if (current <= 3) [2, 3, 4].forEach((n) => out.add(n));
+    if (current >= total - 2) [total - 3, total - 2, total - 1].forEach((n) => out.add(n));
+    const nums = [...out].filter((n) => n >= 1 && n <= total).sort((a, b) => a - b);
+    return nums.flatMap((n, i) => (i && n - nums[i - 1] > 1 ? [0, n] : [n]));
+  }
+
+  function button(label: string, onClick: () => void, opts: { current?: boolean; disabled?: boolean; aria?: string; cls?: string } = {}) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = label;
+    if (opts.cls) b.className = opts.cls;
+    if (opts.aria) b.setAttribute('aria-label', opts.aria);
+    if (opts.current) b.setAttribute('aria-current', 'page');
+    b.disabled = !!opts.disabled;
+    b.addEventListener('click', onClick);
+    return b;
+  }
+
+  function render() {
     const visible = items.filter((li) => filter === 'all' || li.dataset.type === filter);
     const pages = Math.max(1, Math.ceil(visible.length / size));
     page = Math.min(page, pages);
+    const from = (page - 1) * size;
 
     items.forEach((li) => (li.hidden = true));
-    visible.slice((page - 1) * size, page * size).forEach((li) => (li.hidden = false));
+    visible.slice(from, from + size).forEach((li) => (li.hidden = false));
 
-    pager.hidden = pages <= 1;
-    pager.replaceChildren();
-    if (pages > 1) {
-      const add = (label: string, target: number, opts: { current?: boolean; disabled?: boolean; aria?: string } = {}) => {
-        const b = document.createElement('button');
-        b.type = 'button';
-        b.textContent = label;
-        if (opts.aria) b.setAttribute('aria-label', opts.aria);
-        if (opts.current) b.setAttribute('aria-current', 'page');
-        b.disabled = !!opts.disabled;
-        b.addEventListener('click', () => { page = target; render(true); });
-        pager.append(b);
+    pagers.forEach((pager) => {
+      const bottom = pager.hasAttribute('data-bottom');
+      const go = (n: number) => () => {
+        page = n;
+        render();
+        if (bottom) list.scrollIntoView({ behavior: 'smooth', block: 'start' });
       };
-      add('‹', page - 1, { disabled: page === 1, aria: 'Previous page' });
-      for (let n = 1; n <= pages; n++) add(String(n), n, { current: n === page, aria: `Page ${n}` });
-      add('›', page + 1, { disabled: page === pages, aria: 'Next page' });
-    }
 
-    if (scroll) list.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      pager.hidden = pages <= 1;
+      pager.replaceChildren();
+      if (pages <= 1) return;
+
+      const info = document.createElement('p');
+      info.className = 'info';
+      info.textContent = `Showing ${from + 1}–${Math.min(from + size, visible.length)} of ${visible.length}`;
+
+      const nums = document.createElement('div');
+      nums.className = 'nums';
+      window_(page, pages).forEach((n) => {
+        if (n === 0) {
+          const gap = document.createElement('span');
+          gap.className = 'gap';
+          gap.textContent = '…';
+          nums.append(gap);
+        } else {
+          nums.append(button(String(n), go(n), { current: n === page, aria: `Page ${n}` }));
+        }
+      });
+
+      const controls = document.createElement('div');
+      controls.className = 'controls';
+      controls.append(
+        button('← Prev', go(page - 1), { disabled: page === 1, aria: 'Previous page', cls: 'step' }),
+        nums,
+        button('Next →', go(page + 1), { disabled: page === pages, aria: 'Next page', cls: 'step' })
+      );
+
+      pager.append(info, controls);
+    });
   }
 
   chips.forEach((chip) =>
@@ -92,15 +137,36 @@ const filters = [
 
 <style>
   .meta { margin: 0 0 1.25rem; font: .9rem var(--sans); color: var(--muted); }
-  .filters { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1.75rem; }
+  .filters { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1.5rem; }
   .filters button { font: 600 .85rem var(--sans); padding: .4rem 1rem; border-radius: 999px; border: 1px solid var(--line); background: var(--white); color: var(--blue); cursor: pointer; }
   .filters button:hover { background: var(--sky); }
   .filters button[aria-pressed='true'] { background: var(--blue); border-color: var(--blue); color: var(--white); }
   .count { margin-left: .25rem; font-weight: 500; opacity: .8; }
-  .pager { display: flex; flex-wrap: wrap; justify-content: center; gap: .4rem; margin-top: 2rem; }
+
+  .pager {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem 1.5rem;
+    padding: .65rem .9rem; margin-block: 1rem;
+    background: var(--sky); border: 1px solid var(--line); border-radius: var(--radius);
+  }
   .pager[hidden] { display: none; }
-  .pager button { min-width: 2.4rem; height: 2.4rem; padding: 0 .6rem; font: 600 .9rem var(--sans); border-radius: 8px; border: 1px solid var(--line); background: var(--white); color: var(--blue); cursor: pointer; }
-  .pager button:hover:not(:disabled) { background: var(--sky); }
-  .pager button[aria-current='page'] { background: var(--blue); border-color: var(--blue); color: var(--white); }
-  .pager button:disabled { opacity: .4; cursor: default; }
+  .pager :global(.info) { margin: 0; font: 500 .85rem var(--sans); color: var(--muted); }
+  .pager :global(.controls) { display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; }
+  .pager :global(.nums) { display: flex; align-items: center; gap: .3rem; }
+  .pager :global(button) {
+    min-width: 2.25rem; height: 2.25rem; padding: 0 .7rem;
+    font: 600 .875rem var(--sans); color: var(--blue);
+    background: var(--white); border: 1px solid var(--line); border-radius: 999px;
+    cursor: pointer; transition: background .15s, color .15s, border-color .15s, transform .15s;
+  }
+  .pager :global(button:hover:not(:disabled)) { background: var(--blue); border-color: var(--blue); color: var(--white); transform: translateY(-1px); }
+  .pager :global(button[aria-current='page']) { background: var(--navy); border-color: var(--navy); color: var(--white); }
+  .pager :global(button:disabled) { opacity: .4; cursor: default; }
+  .pager :global(.step) { padding: 0 1rem; }
+  .pager :global(.gap) { padding: 0 .15rem; color: var(--muted); font-family: var(--sans); }
+
+  @media (max-width: 560px) {
+    .pager { justify-content: center; text-align: center; }
+    .pager :global(.controls) { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+    .pager :global(.nums) { grid-column: 1 / -1; order: -1; justify-content: center; }
+  }
 </style>
