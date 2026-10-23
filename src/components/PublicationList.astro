@@ -7,7 +7,7 @@ const { items } = Astro.props;
 
 <ol class="pubs">
   {items.map((p) => (
-    <li>
+    <li data-type={p.type}>
       <span class="year">{p.year ?? 'n.d.'}</span>
       <div>
         <span class="tag">{p.type}</span>
@@ -33,6 +33,7 @@ const { items } = Astro.props;
   .pubs { list-style: none; margin: 0; padding: 0; }
   li { display: grid; grid-template-columns: 4.5rem 1fr; gap: .25rem 1.25rem; padding: 1.25rem 0; border-top: 1px solid var(--line); }
   li:first-child { border-top: 0; padding-top: 0; }
+  li[hidden] { display: none; }
   .year { font: 700 1.1rem var(--sans); color: var(--blue); }
   .tag { display: inline-block; font: 600 .7rem var(--sans); letter-spacing: .08em; text-transform: uppercase; background: var(--sky); color: var(--blue-600); padding: .15rem .55rem; border-radius: 999px; }
   h3 { margin: .4rem 0 .35rem; font-size: 1.1rem; }

@@ -35,6 +35,7 @@ const initials = (given = '') =>
     .join(' ');
 
 function formatAuthor(a: { lastName?: string; firstName?: string; name?: string }) {
+  if ((a.name ?? a.lastName) === 'others') return 'et al.';
   if (a.name) return a.name.normalize('NFC');
   const given = initials(a.firstName);
   return (given ? `${a.lastName}, ${given}` : `${a.lastName}`).normalize('NFC');
@@ -80,7 +81,7 @@ function load(): Publication[] {
       type: TYPE_MAP[e.type] ?? 'Other',
       url: doi ? `https://doi.org/${doi}` : f.url,
       bibtex: raw.get(e.key) ?? '',
-      citation: `${authors.join(', ')} (${year ?? 'n.d.'}). ${title}.${venue ? ` ${venue}.` : ''}`,
+      citation: `${authors.join(', ').replace(/, et al\.$/, ' et al.')} (${year ?? 'n.d.'}). ${title}.${venue ? ` ${venue}.` : ''}`,
     };
   });
 }

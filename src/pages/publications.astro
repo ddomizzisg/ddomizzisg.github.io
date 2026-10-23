@@ -6,9 +6,13 @@ import { groups, publications } from '../data/publications';
 import { links } from '../data/site';
 
 const scholar = links[0];
+const filters = [
+  { type: 'all', label: 'All', count: publications.length },
+  ...groups.map((g) => ({ type: g.type, label: g.label, count: g.items.length })),
+];
 ---
 
-<Base title="Publications" description="Selected publications of Dante D. Sánchez-Gallegos.">
+<Base title="Publications" description="Journal and conference publications of Dante D. Sánchez-Gallegos.">
   <PageTitle title="Publications" subtitle="Journal and conference papers" />
   <section class="section">
     <div class="wrap">
@@ -17,18 +21,86 @@ const scholar = links[0];
         <a href="/publications.bib" download>Download BibTeX</a>{' · '}
         <a href={scholar.url} target="_blank" rel="noopener">Google Scholar</a>
       </p>
-      {groups.map((g) => (
-        <div class="group" id={g.type.toLowerCase()}>
-          <div class="section-head"><h2>{g.label} <span class="count">{g.items.length}</span></h2></div>
-          <PublicationList items={g.items} />
-        </div>
-      ))}
+
+      <div class="filters" role="group" aria-label="Filter by type">
+        {filters.map((f, i) => (
+          <button type="button" data-filter={f.type} aria-pressed={String(i === 0)}>
+            {f.label} <span class="count">{f.count}</span>
+          </button>
+        ))}
+      </div>
+
+      <div id="pub-list" data-page-size="10">
+        <PublicationList items={publications} />
+      </div>
+
+      <nav id="pager" class="pager" aria-label="Publication pages" hidden></nav>
     </div>
   </section>
 </Base>
 
+<script>
+  const list = document.querySelector<HTMLElement>('#pub-list')!;
+  const items = [...list.querySelectorAll<HTMLLIElement>('li')];
+  const pager = document.querySelector<HTMLElement>('#pager')!;
+  const chips = document.querySelectorAll<HTMLButtonElement>('[data-filter]');
+  const size = Number(list.dataset.pageSize) || 10;
+
+  let filter = 'all';
+  let page = 1;
+
+  function render(scroll = false) {
+    const visible = items.filter((li) => filter === 'all' || li.dataset.type === filter);
+    const pages = Math.max(1, Math.ceil(visible.length / size));
+    page = Math.min(page, pages);
+
+    items.forEach((li) => (li.hidden = true));
+    visible.slice((page - 1) * size, page * size).forEach((li) => (li.hidden = false));
+
+    pager.hidden = pages <= 1;
+    pager.replaceChildren();
+    if (pages > 1) {
+      const add = (label: string, target: number, opts: { current?: boolean; disabled?: boolean; aria?: string } = {}) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = label;
+        if (opts.aria) b.setAttribute('aria-label', opts.aria);
+        if (opts.current) b.setAttribute('aria-current', 'page');
+        b.disabled = !!opts.disabled;
+        b.addEventListener('click', () => { page = target; render(true); });
+        pager.append(b);
+      };
+      add('‹', page - 1, { disabled: page === 1, aria: 'Previous page' });
+      for (let n = 1; n <= pages; n++) add(String(n), n, { current: n === page, aria: `Page ${n}` });
+      add('›', page + 1, { disabled: page === pages, aria: 'Next page' });
+    }
+
+    if (scroll) list.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  chips.forEach((chip) =>
+    chip.addEventListener('click', () => {
+      filter = chip.dataset.filter!;
+      page = 1;
+      chips.forEach((c) => c.setAttribute('aria-pressed', String(c === chip)));
+      render();
+    })
+  );
+
+  render();
+</script>
+
 <style>
-  .meta { margin: 0 0 2rem; font: .9rem var(--sans); color: var(--muted); }
-  .group + .group { margin-top: 3rem; }
-  .count { font-size: .85rem; font-weight: 600; color: var(--blue-600); background: var(--sky); border-radius: 999px; padding: .1rem .6rem; vertical-align: middle; }
+  .meta { margin: 0 0 1.25rem; font: .9rem var(--sans); color: var(--muted); }
+  .filters { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1.75rem; }
+  .filters button { font: 600 .85rem var(--sans); padding: .4rem 1rem; border-radius: 999px; border: 1px solid var(--line); background: var(--white); color: var(--blue); cursor: pointer; }
+  .filters button:hover { background: var(--sky); }
+  .filters button[aria-pressed='true'] { background: var(--blue); border-color: var(--blue); color: var(--white); }
+  .count { margin-left: .25rem; font-weight: 500; opacity: .8; }
+  .pager { display: flex; flex-wrap: wrap; justify-content: center; gap: .4rem; margin-top: 2rem; }
+  .pager[hidden] { display: none; }
+  .pager button { min-width: 2.4rem; height: 2.4rem; padding: 0 .6rem; font: 600 .9rem var(--sans); border-radius: 8px; border: 1px solid var(--line); background: var(--white); color: var(--blue); cursor: pointer; }
+  .pager button:hover:not(:disabled) { background: var(--sky); }
+  .pager button[aria-current='page'] { background: var(--blue); border-color: var(--blue); color: var(--white); }
+  .pager button:disabled { opacity: .4; cursor: default; }
 </style>
